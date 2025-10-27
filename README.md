@@ -1,28 +1,28 @@
 # Urban Sound Classification
 
-##  Project Overview 
+## Project Overview 
 
 This project aims to build a machine learning pipeline to classify 10+ categories of urban environmental sounds, such as traffic noise, sirens, birdsong, and construction noise, enabling smart-city monitoring and analysis of acoustic environments.
 
-## Goals 
+### Goals 
 
 **Accurate Sound Recognition**: Build a model that can label environmental sounds with high accuracy.
 
-## Data Collection 
+### Data Collection 
 
 [UrbanSound8K dataset](https://audeering.github.io/datasets/datasets/urbansound8k.html)  
 Contains 8732 labeled sound clips (<=4s) across 10 urban classes.  
 
 **Optional**: Sharing the final cleaned dataset on Kaggle or Hugging Face for reproducibility.
 
-## Modeling
+### Modeling
 
-### **Feature Extraction**
+#### **Feature Extraction**
 
 **Basic method**: Compute Mel-spectrograms.
 **Optional**:  Apply data augmentation (time stretching, pitch shifting).
 
-### **Model Architectures**
+#### **Model Architectures**
 
 **Baseline**: 2D CNN with batch norm and dropout.
 
@@ -34,7 +34,7 @@ Contains 8732 labeled sound clips (<=4s) across 10 urban classes.
 - AudioCLIP for inference-level benchmarking against the baseline.
 
 
-## Visualization
+### Visualization
 
 **Basic visualization method**: Interactive confusion matrix.
 
@@ -45,14 +45,6 @@ Contains 8732 labeled sound clips (<=4s) across 10 urban classes.
 
 - Per-class accuracy plots.
 
-
-## Test Plan
-
-**Split**: 80/20 train/test, stratified by class.
-
-**Cross-validation**: 5-fold on training set to tune hyperparameters.
-
-Compare performance across models and feature representations.
 
 ---
 
@@ -83,11 +75,11 @@ We implemented a comprehensive preprocessing pipeline to convert raw audio files
 | Step | Description | Parameters |
 |------|-------------|------------|
 | **1. Audio Loading** | Load audio files using `soundfile` for efficiency | - |
-| **2. Resampling** | Standardize sampling rate (optional, uses original SR) | - |
+| **2. Resampling** | Standardize sampling rate (disabled, uses original SR) | `sample_rate=None` |
 | **3. Mono Conversion** | Convert stereo to mono by averaging channels | - |
 | **4. Mel-Spectrogram Extraction** | Transform waveform to log-Mel spectrogram | `n_mels=64`, `n_fft=1024`, `hop_length=512`, `fmax=8000` |
 | **5. Normalization** | Min-max normalization to [0,1] range | Per-sample normalization |
-| **6. Fixed Length** | Pad or crop to fixed time frames | `T=375` frames (≈4.0 seconds) |
+| **6. Fixed Length** | Pad or crop to fixed time frames | `T=586` frames (≈4.0 seconds) |
 | **7. Tensor Conversion** | Convert to PyTorch tensor format | `(1, n_mels, T)` |
 
 ### Key Processing Features
@@ -98,25 +90,28 @@ We implemented a comprehensive preprocessing pipeline to convert raw audio files
 
 ## Detailed Description of Data Modeling Methods
 
-### Model Architecture: SmallCNN
+### Model Architecture
 
-We designed a lightweight 2D Convolutional Neural Network specifically for Mel-spectrogram classification:
+We designed a compact **2D CNN** classifier to perform environmental sound classification on log-Mel spectrograms.  
+The model progressively extracts local time–frequency patterns via convolutional layers and then maps them into class logits using a fully-connected classifier.
 
 #### Architecture Overview
 
 | Layer Type | Channels/Units | Kernel/Stride | Output Shape | Activation |
 |------------|----------------|---------------|--------------|------------|
-| **Input** | 1 × 64 × 375 | - | - | - |
-| **Conv2d + BN + ReLU** | 1 → 16 | 3×3 / 1 | 16 × 64 × 375 | ReLU |
-| **MaxPool2d** | - | 2×2 | 16 × 32 × 187 | - |
-| **Conv2d + BN + ReLU** | 16 → 32 | 3×3 / 1 | 32 × 32 × 187 | ReLU |
-| **MaxPool2d** | - | 2×2 | 32 × 16 × 93 | - |
-| **Conv2d + BN + ReLU** | 32 → 64 | 3×3 / 1 | 64 × 16 × 93 | ReLU |
-| **MaxPool2d** | - | 2×2 | 64 × 8 × 46 | - |
-| **Flatten + Linear + Dropout** | 23,552 → 256 | - | 256 | ReLU + Dropout(0.3) |
+| **Input** | 1 × 64 × 586 | - | - | - |
+| **Conv2d + BN + ReLU** | 1 → 16 | 3×3 / 1 | 16 × 64 × 586 | ReLU |
+| **MaxPool2d** | - | 2×2 | 16 × 32 × 293 | - |
+| **Conv2d + BN + ReLU** | 16 → 32 | 3×3 / 1 | 32 × 32 × 293 | ReLU |
+| **MaxPool2d** | - | 2×2 | 32 × 16 × 146 | - |
+| **Conv2d + BN + ReLU** | 32 → 64 | 3×3 / 1 | 64 × 16 × 146 | ReLU |
+| **MaxPool2d** | - | 2×2 | 64 × 8 × 73 | - |
+| **Flatten + Linear + Dropout** | 37,376 → 256 | - | 256 | ReLU + Dropout(0.3) |
 | **Linear (Output)** | 256 → 10 | - | 10 | Softmax (via CrossEntropy) |
 
 **Total Parameters**: ~0.47M (0.47 million)
+
+This lightweight architecture strikes a balance between **training speed** and **representational power**, making it suitable for real-time or low-resource audio classification.
 
 #### Training Configuration
 
@@ -176,7 +171,8 @@ The model was evaluated on the official test split (fold 10) with the following 
 | street_music | 0.81 | 0.67 | 0.73 | 100 |
 
 #### Confusion Matrix
-![Confusion Matrix](plots/confusion_matrix.png)
+![Confusion Matrix](plots/confusion_matrix_1.png)
+![Confusion Matrix](plots/confusion_matrix_2.png)
 *Figure 4: Confusion matrix showing classification results*
 
 ### Key Findings
@@ -228,12 +224,11 @@ The model was evaluated on the official test split (fold 10) with the following 
 ## Files Structure
 
 ```
-├── UrbanSOUND.ipynb          # Main analysis notebook
 ├── 2D_cnn.ipynb             # Baseline CNN implementation
-├── data/
-│   ├── create.py            # Data creation utilities
-│   ├── download.py          # Dataset download script
-│   ├── publish.py           # Data publishing utilities
+├── data/                    # Dataset download scripts and data storage
+│   ├── create.py
+│   ├── download.py
+│   ├── publish.py
 │   └── requirements.txt     # Dependencies
 └── plots/                   # Generated visualizations
     ├── class_distribution.png
