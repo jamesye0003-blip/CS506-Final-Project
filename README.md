@@ -4,6 +4,8 @@
 
 This project aims to build a machine learning pipeline to classify 10+ categories of urban environmental sounds, such as traffic noise, sirens, birdsong, and construction noise, enabling smart-city monitoring and analysis of acoustic environments.
 
+The midterm presentation has been uploaded to YouTube. The link is [CS506 Midterm Presentation by Yuwei's team](https://youtu.be/urkMUZ9gzAA).
+
 ### Goals 
 
 **Accurate Sound Recognition**: Build a model that can label environmental sounds with high accuracy.
