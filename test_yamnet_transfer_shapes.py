@@ -1,10 +1,6 @@
 import torch
 
-# 按你自己的文件和类名改这里：
-# 例子假设 train_yamnet_transfer.py 中有:
-#   - YamNetMLP (或 YAMNetMLP)
-#   - CLASS_NAMES (长度为 10)
-#   - EMBED_DIM = 1024
+
 from train_yamnet_transfer import YAMNetMLP, CLASS_NAMES
 
 EMBED_DIM = 1024

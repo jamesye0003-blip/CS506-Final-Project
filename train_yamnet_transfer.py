@@ -10,13 +10,11 @@ from sklearn.metrics import classification_report, confusion_matrix
 import matplotlib.pyplot as plt
 
 
-# =====================
-# 配置 & 常量
-# =====================
+
 
 NUM_CLASSES = 10
 
-# UrbanSound8K 官方 classID → 类别名称
+
 CLASS_NAMES = [
     "air_conditioner",   # 0
     "car_horn",          # 1
@@ -30,7 +28,7 @@ CLASS_NAMES = [
     "street_music",      # 9
 ]
 
-# 默认 fold 划分：1–8 训练，9 验证，10 测试
+
 TRAIN_FOLDS = [1, 2, 3, 4, 5, 6, 7, 8]
 VAL_FOLDS = [9]
 TEST_FOLDS = [10]

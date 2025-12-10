@@ -4,14 +4,14 @@ import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
 os.environ["LOKY_MAX_CPU_COUNT"] = "8"
-# 可选：交互版
+
 try:
     import plotly.express as px
     HAS_PLOTLY = True
 except ImportError:
     HAS_PLOTLY = False
 
-# ========= 配置 =========
+
 NPZ_PATH = "yamnet_urbansound8k_embeddings.npz"
 SAVE_DIR = "visualizations"
 SUBSAMPLE = 2000  # t-SNE 抽样以加速

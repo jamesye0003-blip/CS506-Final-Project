@@ -7,14 +7,14 @@ import tensorflow as tf
 import tensorflow_hub as hub
 from tqdm import tqdm
 
-# ------------ 配置 ------------
-URBANSOUND_ROOT = "data"  # 改成你本地数据集根目录
+
+URBANSOUND_ROOT = "data"
 CSV_PATH = os.path.join(URBANSOUND_ROOT, "metadata", "UrbanSound8K.csv")
 OUTPUT_NPZ = "yamnet_urbansound8k_embeddings.npz"
 
-TARGET_SR = 16000  # YAMNet 要求 16kHz
+TARGET_SR = 16000
 
-# ------------ 加载 YAMNet ------------
+
 print("Loading YAMNet from TF Hub...")
 yamnet_model = hub.load("https://tfhub.dev/google/yamnet/1")
 print("YAMNet loaded.")
