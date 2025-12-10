@@ -1,0 +1,32 @@
+===== Test result (YAMNet + MLP) =====
+Test Loss: 0.7297 | Test Acc: 0.8196
+
+Test Report:
+                  precision    recall  f1-score   support
+
+ air_conditioner      0.775     0.550     0.643       100
+        car_horn      0.735     0.758     0.746        33
+children_playing      0.830     0.880     0.854       100
+        dog_bark      0.705     0.790     0.745       100
+        drilling      0.891     0.820     0.854       100
+   engine_idling      0.821     0.935     0.874        93
+        gun_shot      0.941     1.000     0.970        32
+      jackhammer      0.938     0.948     0.943        96
+           siren      0.733     0.663     0.696        83
+    street_music      0.836     0.920     0.876       100
+
+        accuracy                          0.820       837
+       macro avg      0.821     0.826     0.820       837
+    weighted avg      0.819     0.820     0.816       837
+
+Confusion matrix (rows = true, cols = pred):
+55 0 0 4 2 13 0 2 16 8
+2 25 1 0 0 0 1 0 2 2
+2 1 88 6 1 0 0 0 0 2
+3 0 8 79 4 0 1 0 0 5
+4 6 2 0 82 4 0 0 1 1
+2 0 0 0 0 87 0 4 0 0
+0 0 0 0 0 0 32 0 0 0
+0 0 0 0 3 2 0 91 0 0
+3 0 2 23 0 0 0 0 55 0
+0 2 5 0 0 0 0 0 1 92
