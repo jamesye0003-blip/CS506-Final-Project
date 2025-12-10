@@ -1,4 +1,5 @@
 import argparse
+import os
 import random
 
 import numpy as np
@@ -6,6 +7,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from sklearn.metrics import classification_report, confusion_matrix
+import matplotlib.pyplot as plt
 
 
 # =====================
@@ -182,6 +184,40 @@ def eval_model(model, loader, criterion, device):
     return avg_loss, acc, all_labels, all_preds
 
 
+def plot_training_curves(history, save_path="plots/yamnet_training_curves.png"):
+    """画出类似你截图里的 Loss & Accuracy 曲线。"""
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+
+    epochs = range(1, len(history["train_loss"]) + 1)
+
+    plt.figure(figsize=(12, 4))
+
+    # 左边：Loss
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs, history["train_loss"], marker="o", label="Train Loss")
+    plt.plot(epochs, history["val_loss"], marker="s", label="Val Loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.title("Training & Validation Loss")
+    plt.legend()
+    plt.grid(alpha=0.3)
+
+    # 右边：Accuracy
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs, history["train_acc"], marker="o", label="Train Acc")
+    plt.plot(epochs, history["val_acc"], marker="s", label="Val Acc")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.title("Training & Validation Accuracy")
+    plt.legend()
+    plt.grid(alpha=0.3)
+
+    plt.tight_layout()
+    plt.savefig(save_path, dpi=300)
+    plt.show()
+    print(f"Training curves saved to {save_path}")
+
+
 # =====================
 # 主程序
 # =====================
@@ -247,6 +283,14 @@ def main(args):
     best_val_acc = 0.0
     best_state = None
 
+    # 记录训练曲线
+    history = {
+        "train_loss": [],
+        "train_acc": [],
+        "val_loss": [],
+        "val_acc": [],
+    }
+
     # ---- 训练循环 ----
     for epoch in range(1, args.epochs + 1):
         train_loss, train_acc = train_one_epoch(
@@ -255,6 +299,11 @@ def main(args):
         val_loss, val_acc, _, _ = eval_model(
             model, val_loader, criterion, device
         )
+
+        history["train_loss"].append(train_loss)
+        history["train_acc"].append(train_acc)
+        history["val_loss"].append(val_loss)
+        history["val_acc"].append(val_acc)
 
         print(
             f"[Epoch {epoch:02d}] "
@@ -269,6 +318,9 @@ def main(args):
 
     print("Best val acc:", best_val_acc)
 
+    # 画出训练曲线
+    plot_training_curves(history, save_path=args.save_curves)
+
     if best_state is not None:
         model.load_state_dict(best_state)
 
@@ -279,7 +331,7 @@ def main(args):
     print("\n===== Test result (YAMNet + MLP) =====")
     print(f"Test Loss: {test_loss:.4f} | Test Acc: {test_acc:.4f}")
 
-    # classification_report（就是你截图里的那个表）
+    # classification_report（就是你之前截图里的那个表）
     print("\nTest Report:")
     report_str = classification_report(
         y_true,
@@ -346,6 +398,12 @@ if __name__ == "__main__":
         type=str,
         default="yamnet_test_report.txt",
         help="Path to save text report (set empty string to disable).",
+    )
+    parser.add_argument(
+        "--save_curves",
+        type=str,
+        default="plots/yamnet_training_curves.png",
+        help="Path to save training curves figure.",
     )
 
     args = parser.parse_args()
