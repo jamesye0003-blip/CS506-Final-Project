@@ -1,7 +1,7 @@
 
 # CS506 Final Project — UrbanSound8K Audio Classification
-**Author:** Xian Gong  
-**Presentation Video:** *(Insert your 10-minute YouTube link here)*
+**Member** Xian Gong, Yuwei Ye, Yuan Zhao, Zeyu Dong
+**Presentation Video:** *(https://youtu.be/wZop3Z2pxFw)*
 
 
 ## Project Overview
@@ -599,6 +599,7 @@ See:
 - `Makefile`  
 - `requirements.txt`    
 - Visualization outputs  
+
 
 
 
