@@ -424,8 +424,9 @@ Compared to the midterm baseline (63.6% accuracy, 67.9% macro F1), the final mod
 
 #### Confusion Matrix 
 
+![img_2.png](plots/3.png) 
 ![img_1.png](plots/2.png)  
-![img_2.png](plots/3.png)  
+ 
 
 *Figure: Raw and normalized confusion matrices for the final ResNet-based model.*
 
@@ -449,7 +450,7 @@ Compared to the midterm baseline (63.6% accuracy, 67.9% macro F1), the final mod
 
 ### Training Performance (YAMNet + MLP)
 
-![Training Curves](plots\yamnet_training_curves.png)
+![Training Curves](plots/yamnet_training_curves.png)
 
 *Figure: Training & validation loss/accuracy curves for the YAMNet embedding classifier.*
 
@@ -496,8 +497,8 @@ YAMNet improves **+18% accuracy** over the midterm baseline and slightly outperf
 
 ### Confusion Matrices
 
-![CM Norm](plots\yamnet_confusion_matrix_normalized.png)
-![CM Raw](plots\yamnet_confusion_matrix.png)
+![CM Norm](plots/yamnet_confusion_matrix_normalized.png)
+![CM Raw](plots/yamnet_confusion_matrix.png)
 
 ---
 
@@ -599,6 +600,7 @@ See:
 - `requirements.txt`  
 - `test`  
 - Visualization outputs  
+
 
 
 
