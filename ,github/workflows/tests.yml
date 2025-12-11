@@ -1,0 +1,40 @@
+name: Run Tests
+
+# Trigger the workflow on any push or pull request to main/master
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Python (version can be adjusted if needed)
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      # Step 3: Install system dependencies required by librosa / soundfile
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsndfile1
+
+      # Step 4: Install Python dependencies
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Step 5: Run pytest (will automatically detect tests in test/ directory)
+      - name: Run tests
+        run: |
+          pytest -q
