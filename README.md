@@ -141,7 +141,7 @@ This pipeline:
 
 Static figure:
 
-![img_1.png](visualizations\tsne_yamnet_embeddings.png)
+![YAMNet.png](plots/tsneyamnetembeddings.png)
 
 
 Interactive:
@@ -155,7 +155,7 @@ Extracts embeddings from the ResNet penultimate layer and performs PCA+t-SNE.
 
 Static:
 
-![img_1.png](visualizations\tsne_resnet3ch_embeddings.png)
+![resnet.png](plots/tsneresnet3chembeddings.png)
 
 
 Interactive:
@@ -599,5 +599,6 @@ See:
 - `requirements.txt`  
 - `test`  
 - Visualization outputs  
+
 
 
