@@ -1,30 +1,116 @@
 import torch
+import torch.nn as nn
 
-from train_resnet_3ch import SmallResNet, CLASS_NAMES
+# 与项目中一致的类别列表（只用于确定 num_classes）
+CLASS_NAMES = [
+    "air_conditioner",   # 0
+    "car_horn",          # 1
+    "children_playing",  # 2
+    "dog_bark",          # 3
+    "drilling",          # 4
+    "engine_idling",     # 5
+    "gun_shot",          # 6
+    "jackhammer",        # 7
+    "siren",             # 8
+    "street_music",      # 9
+]
+
+
+# ===== 这里是一个「简化复制版」的 BasicBlock 和 SmallResNet =====
+# 只依赖 torch，不依赖 pandas/librosa/sklearn 等。
+
+class BasicBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, stride=1):
+        super().__init__()
+        self.conv1 = nn.Conv2d(
+            in_channels, out_channels, kernel_size=3,
+            stride=stride, padding=1, bias=False
+        )
+        self.bn1 = nn.BatchNorm2d(out_channels)
+
+        self.conv2 = nn.Conv2d(
+            out_channels, out_channels, kernel_size=3,
+            stride=1, padding=1, bias=False
+        )
+        self.bn2 = nn.BatchNorm2d(out_channels)
+
+        self.relu = nn.ReLU(inplace=True)
+
+        if stride != 1 or in_channels != out_channels:
+            self.downsample = nn.Sequential(
+                nn.Conv2d(
+                    in_channels, out_channels,
+                    kernel_size=1, stride=stride, bias=False
+                ),
+                nn.BatchNorm2d(out_channels),
+            )
+        else:
+            self.downsample = None
+
+    def forward(self, x):
+        identity = x
+
+        out = self.relu(self.bn1(self.conv1(x)))
+        out = self.bn2(self.conv2(out))
+
+        if self.downsample is not None:
+            identity = self.downsample(identity)
+
+        out = out + identity
+        out = self.relu(out)
+        return out
+
+
+class SmallResNet(nn.Module):
+    def __init__(self, n_classes, in_channels=3):
+        super().__init__()
+        self.stem = nn.Sequential(
+            nn.Conv2d(in_channels, 32, kernel_size=3,
+                      stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(32),
+            nn.ReLU(inplace=True),
+        )
+
+        self.layer1 = BasicBlock(32, 64, stride=2)
+        self.layer2 = BasicBlock(64, 128, stride=2)
+        self.layer3 = BasicBlock(128, 256, stride=2)
+
+        self.gap = nn.AdaptiveAvgPool2d(1)
+        self.dropout = nn.Dropout(p=0.5)
+        self.fc = nn.Linear(256, n_classes)
+
+    def forward(self, x):
+        # x: (B, 3, 64, T)
+        x = self.stem(x)     # (B, 32, 64, T)
+        x = self.layer1(x)   # (B, 64, 32, T/2)
+        x = self.layer2(x)   # (B, 128, 16, T/4)
+        x = self.layer3(x)   # (B, 256, 8, T/8)
+
+        x = self.gap(x)      # (B, 256, 1, 1)
+        x = x.view(x.size(0), -1)  # (B, 256)
+        x = self.dropout(x)
+        x = self.fc(x)       # (B, n_classes)
+        return x
 
 
 def test_small_resnet_output_shape():
-
+    """
+    检查 SmallResNet 在假数据上的输出形状是否正确：
+    输入: (batch, 3, n_mels, T)
+    输出: (batch, num_classes)
+    """
     num_classes = len(CLASS_NAMES)
 
-    # 建一个很小的模型，不需要加载任何权重
     model = SmallResNet(n_classes=num_classes, in_channels=3)
     model.eval()
 
-
-    # - batch_size = 4
-    # - 3 通道 (log-mel, delta1, delta2)
-    # - n_mels = 64（和 CFG["n_mels"]
-    # - T = 345（和运行日志里 ResNet 使用的 T_fixed 一
+    # 与项目设定一致：n_mels=64, T=345（任意正数也可以）
     dummy_input = torch.randn(4, 3, 64, 345)
 
     with torch.no_grad():
         logits = model(dummy_input)
 
-    # 应该输出 (4, num_classes)
     assert logits.shape == (4, num_classes)
-
-    # 不应该出现 NaN / Inf
     assert torch.isfinite(logits).all()
 
 
@@ -33,6 +119,7 @@ def test_small_resnet_single_sample():
     再测一下 batch_size = 1 时也能正常前向传播。
     """
     num_classes = len(CLASS_NAMES)
+
     model = SmallResNet(n_classes=num_classes, in_channels=3)
     model.eval()
 

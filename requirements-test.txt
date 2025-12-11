@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 torch
 torchaudio
 librosa
@@ -13,3 +14,8 @@ tensorflow
 tensorflow_hub
 tqdm
 pytest
+=======
+pytest
+numpy
+torch==2.2.0 
+>>>>>>> be6a687936962f719921bed6e4260a2bf6d266d2
