@@ -3,9 +3,9 @@ name: Run Tests
 # Trigger the workflow on any push or pull request to main/master
 on:
   push:
-    branches: [ main, master ]
+    branches: [ gx ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ gx ]
 
 jobs:
   tests:
