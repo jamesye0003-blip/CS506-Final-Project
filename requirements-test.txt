@@ -1,0 +1,4 @@
+pytest
+numpy
+torch==2.2.0 
+
