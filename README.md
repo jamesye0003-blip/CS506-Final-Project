@@ -497,8 +497,8 @@ YAMNet improves **+18% accuracy** over the midterm baseline and slightly outperf
 
 ### Confusion Matrices
 
-![CM Norm](plots/yamnet_confusion_matrix_normalized.png)
 ![CM Raw](plots/yamnet_confusion_matrix.png)
+![CM Norm](plots/yamnet_confusion_matrix_normalized.png)
 
 ---
 
@@ -600,6 +600,7 @@ See:
 - `requirements.txt`  
 - `test`  
 - Visualization outputs  
+
 
 
 
