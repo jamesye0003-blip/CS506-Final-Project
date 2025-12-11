@@ -575,7 +575,7 @@ Overall, both macro F1 and weighted F1 remain around **0.82**, reflecting **well
 | Training Cost | High | Very low |
 | Generalization | Moderate | Strong |
 | Task-specific Learning | Excellent | Limited |
-| UrbanSound8K Accuracy | ~80.5% | 81.96% |
+| UrbanSound8K Accuracy | 80.8% | 81.96% |
 | Noise Robustness | Moderate | High |
 | Best For | Custom feature learning | Fast, strong transfer learning |
 
@@ -599,6 +599,7 @@ See:
 - `Makefile`  
 - `requirements.txt`    
 - Visualization outputs  
+
 
 
 
