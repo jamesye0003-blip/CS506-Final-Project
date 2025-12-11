@@ -9,7 +9,7 @@ This project implements two end-to-end audio classification pipelines for the Ur
 1. A custom three-channel log-mel ResNet (PyTorch)
 2. A transfer-learning pipeline using YAMNet embeddings + MLP classifier
 
-The final system includes reproducible code, automated dataset download, interactive visualizations, testable modules, and CI integration through GitHub Actions.
+The final system includes reproducible code, automated dataset download, interactive visualizations, and testable modules.
 
 ---
 
@@ -21,6 +21,7 @@ This project includes a complete `Makefile` and pytest tests so that anyone can 
 
 ```
 make install
+make data
 make train_all
 make extract_all
 make viz_all
@@ -599,6 +600,7 @@ See:
 - `Makefile`  
 - `requirements.txt`    
 - Visualization outputs  
+
 
 
 
