@@ -597,9 +597,9 @@ This project successfully:
 See:
 
 - `Makefile`  
-- `requirements.txt`  
-- `test`  
+- `requirements.txt`    
 - Visualization outputs  
+
 
 
 
