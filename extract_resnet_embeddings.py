@@ -6,7 +6,7 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 
-# 从训练脚本导入 Dataset / 模型 / 配置
+# Import Dataset / model / config from the training script
 from train_resnet_3ch import (
     UrbanSoundMel3Ch,
     SmallResNet,
@@ -35,7 +35,7 @@ def main():
             f"Please run train_resnet_3ch.py first to save the best model."
         )
 
-    # 1) 准备数据：用全部 folds（1–10），但 is_train=False 只做确定性裁剪
+    # 1) Prepare data: use all folds (1–10)
     all_folds = TRAIN_FOLDS + VAL_FOLDS + TEST_FOLDS
     df = pd.read_csv(META_FILE)
 
@@ -47,7 +47,7 @@ def main():
         folds=all_folds,
         cfg=CFG,
         class_to_idx=class_to_idx,
-        is_train=False,   # 固定裁剪方式，避免随机性
+        is_train=False,   # fixed cropping
     )
 
     loader = DataLoader(
@@ -60,21 +60,21 @@ def main():
 
     print(f"Total samples for embedding extraction: {len(ds_all)}")
 
-    # 2) 准备模型并加载最佳权重
+    # 2) Build model and load best checkpoint
     num_classes = len(CLASS_NAMES)
     model = SmallResNet(n_classes=num_classes, in_channels=3).to(device)
     state_dict = torch.load(CHECKPOINT_PATH, map_location=device)
     model.load_state_dict(state_dict)
     model.eval()
 
-    # 3) 前向传播，取 FC 之前的 256 维特征
+    # 3) Forward pass and extract 256-dim features before the FC layer
     all_feats = []
     all_labels = []
 
     with torch.no_grad():
         for x, y, _ in loader:
             x = x.to(device)
-            # 手动跑到 GAP + Dropout 之后，取 256 维 embedding
+            # Manually run up to GAP + Dropout and take 256-dim embeddings
             h = model.stem(x)
             h = model.layer1(h)
             h = model.layer2(h)
@@ -91,7 +91,7 @@ def main():
     print("Embeddings shape:", embeddings.shape)
     print("Labels shape:", labels.shape)
 
-    # 4) 保存为 .npz，格式和 YAMNet 一样 (embeddings + labels)
+    # 4) Save as
     np.savez(SAVE_NPZ_PATH, embeddings=embeddings, labels=labels)
     print(f"[Saved] {SAVE_NPZ_PATH}")
 

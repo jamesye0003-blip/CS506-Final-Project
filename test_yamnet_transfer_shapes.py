@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-# 与 YAMNet 迁移学习设置保持一致
+# Keep consistent with the YAMNet transfer learning setup
 NUM_CLASSES = 10
 EMBED_DIM = 1024
 
@@ -18,12 +18,9 @@ CLASS_NAMES = [
     "street_music",      # 9
 ]
 
-
+#A simple two-layer MLP that uses 1024-dimensional YAMNet embeddings
 class YAMNetMLP(nn.Module):
-    """
-    简单的两层 MLP，用 YAMNet 1024 维 embedding 做分类。
-    这里直接在测试文件里定义，避免依赖 tensorflow/tf_hub/sklearn 等。
-    """
+
 
     def __init__(self, in_dim: int = EMBED_DIM, num_classes: int = NUM_CLASSES):
         super().__init__()
@@ -40,13 +37,9 @@ class YAMNetMLP(nn.Module):
     def forward(self, x):
         return self.net(x)
 
-
+#Verify that the output shape of the YAMNet-transfer MLP classifier is correct.
 def test_yamnet_mlp_output_shape():
-    """
-    检查 YAMNet 迁移学习的 MLP classifier 输出形状是否正确：
-    输入: (batch, EMBED_DIM) 的 embedding
-    输出: (batch, num_classes)
-    """
+
     num_classes = len(CLASS_NAMES)
 
     model = YAMNetMLP(in_dim=EMBED_DIM, num_classes=num_classes)
@@ -60,11 +53,9 @@ def test_yamnet_mlp_output_shape():
     assert logits.shape == (8, num_classes)
     assert torch.isfinite(logits).all()
 
-
+#Additional check: ensure the model works when batch_size = 1.
 def test_yamnet_mlp_single_sample():
-    """
-    再测一下 batch_size = 1 的情况。
-    """
+
     num_classes = len(CLASS_NAMES)
 
     model = YAMNetMLP(in_dim=EMBED_DIM, num_classes=num_classes)

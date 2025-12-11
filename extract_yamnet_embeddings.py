@@ -18,30 +18,26 @@ TARGET_SR = 16000
 print("Loading YAMNet from TF Hub...")
 yamnet_model = hub.load("https://tfhub.dev/google/yamnet/1")
 print("YAMNet loaded.")
-
+#Load a WAV file and resample it to target_sr.
 def load_and_resample(path, target_sr=TARGET_SR):
-    """
-    读取 wav 并重采样到 target_sr，返回 1D float32 waveform
-    """
+
     wav, sr = sf.read(path)
-    # 立体声 -> 单声道
+    # Stereo → mono by averaging channels
     if wav.ndim > 1:
         wav = np.mean(wav, axis=1)
-    # 重采样到 16k
+    # Resample to 16 kHz if needed
     if sr != target_sr:
         wav = librosa.resample(wav, orig_sr=sr, target_sr=target_sr)
     return wav.astype(np.float32)
 
+#Extract a single 1024-dimensional YAMNet embedding from a 1D waveform.
 def extract_yamnet_embedding(waveform):
-    """
-    waveform: 1D numpy array, 16kHz
-    输出：单个 1024 维 embedding（时间维平均）
-    """
-    # YAMNet 需要 Tensor，shape: [num_samples]
+
+    # YAMNet expects a Tensor of shape [num_samples]
     waveform_tf = tf.convert_to_tensor(waveform, dtype=tf.float32)
-    # 模型输出：scores [num_patches, 521], embeddings [num_patches, 1024], spectrogram
+    # Model outputs
     _, embeddings, _ = yamnet_model(waveform_tf)
-    # 对时间维取平均，得到 [1024]
+    # Average across time patches
     emb = tf.reduce_mean(embeddings, axis=0)
     return emb.numpy()
 

@@ -4,20 +4,20 @@ import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
 
-# 限制 joblib / loky 的并行核数，避免某些系统报错
+
 os.environ["LOKY_MAX_CPU_COUNT"] = "8"
 
-# 可选：交互版
+
 try:
     import plotly.express as px
     HAS_PLOTLY = True
 except ImportError:
     HAS_PLOTLY = False
 
-# ========= 配置 =========
+# Configuration
 NPZ_PATH = "resnet3ch_urbansound8k_embeddings.npz"
 SAVE_DIR = "visualizations"
-SUBSAMPLE = 2000  # t-SNE 抽样以加速
+SUBSAMPLE = 2000  # Subsample for t-SNE to improve speed
 
 CLASS_NAMES = [
     "air_conditioner",
@@ -88,7 +88,6 @@ def main():
     )
     X_2d = tsne.fit_transform(X_pca)
 
-    # ---- 静态图保存 ----
     plt.figure(figsize=(10, 8))
     cmap = plt.get_cmap("tab10")
     for cid in range(10):
@@ -108,7 +107,7 @@ def main():
     plt.show()
     print(f"[Saved] {out_png}")
 
-    # ---- 可交互 HTML ----
+    # Save interactive HTML version
     save_interactive_tsne(X_2d, y)
 
 
