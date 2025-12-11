@@ -8,7 +8,7 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 from sklearn.metrics import classification_report, confusion_matrix
 import matplotlib.pyplot as plt
-
+import seaborn as sns
 
 
 
@@ -196,7 +196,7 @@ def plot_training_curves(history, save_path="plots/yamnet_training_curves.png"):
     plt.plot(epochs, history["val_loss"], marker="s", label="Val Loss")
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
-    plt.title("Training & Validation Loss")
+    plt.title("Loss Curve(YAMNet)")
     plt.legend()
     plt.grid(alpha=0.3)
 
@@ -206,7 +206,7 @@ def plot_training_curves(history, save_path="plots/yamnet_training_curves.png"):
     plt.plot(epochs, history["val_acc"], marker="s", label="Val Acc")
     plt.xlabel("Epoch")
     plt.ylabel("Accuracy")
-    plt.title("Training & Validation Accuracy")
+    plt.title("Accuracy Curve(YAMNet)")
     plt.legend()
     plt.grid(alpha=0.3)
 
@@ -215,6 +215,58 @@ def plot_training_curves(history, save_path="plots/yamnet_training_curves.png"):
     plt.show()
     print(f"Training curves saved to {save_path}")
 
+def plot_confusion_matrices_yamnet(y_true, y_pred, class_names, save_dir="plots"):
+    """
+    绘制 YAMNet + MLP 的两个混淆矩阵：
+    1) 原始计数
+    2) 按行归一化后的比例
+    """
+    os.makedirs(save_dir, exist_ok=True)
+
+    cm = confusion_matrix(y_true, y_pred, labels=list(range(len(class_names))))
+    cm_norm = cm.astype("float") / cm.sum(axis=1, keepdims=True)
+
+    # ---- 图 1：原始计数 ----
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(
+        cm,
+        annot=True,
+        fmt="d",
+        cmap="Blues",
+        xticklabels=class_names,
+        yticklabels=class_names,
+        cbar=True,
+    )
+    plt.xlabel("Predicted Label")
+    plt.ylabel("True Label")
+    plt.title("UrbanSound8K - Confusion Matrix (YAMNet + MLP)")
+    plt.tight_layout()
+    cm_path = os.path.join(save_dir, "yamnet_confusion_matrix.png")
+    plt.savefig(cm_path, dpi=300)
+    print(f"Confusion matrix (YAMNet counts) saved to {cm_path}")
+    plt.close()
+
+    # ---- 图 2：按行归一化 ----
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(
+        cm_norm,
+        annot=True,
+        fmt=".2f",
+        cmap="YlGnBu",
+        xticklabels=class_names,
+        yticklabels=class_names,
+        cbar=True,
+        vmin=0.0,
+        vmax=1.0,
+    )
+    plt.xlabel("Predicted Label")
+    plt.ylabel("True Label")
+    plt.title("UrbanSound8K - Normalized Confusion Matrix (YAMNet + MLP)")
+    plt.tight_layout()
+    cm_norm_path = os.path.join(save_dir, "yamnet_confusion_matrix_normalized.png")
+    plt.savefig(cm_norm_path, dpi=300)
+    print(f"Confusion matrix (YAMNet normalized) saved to {cm_norm_path}")
+    plt.close()
 
 # =====================
 # 主程序
@@ -344,6 +396,8 @@ def main(args):
     cm = confusion_matrix(y_true, y_pred, labels=list(range(NUM_CLASSES)))
     print("Confusion matrix (rows = true, cols = pred):")
     print(cm)
+
+    plot_confusion_matrices_yamnet(y_true, y_pred, CLASS_NAMES, save_dir="plots")
 
     # 可选：把报告保存成文本文件，方便写 README
     if args.save_report:
