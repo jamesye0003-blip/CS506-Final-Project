@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-# 与项目中一致的类别列表（只用于确定 num_classes）
+# Class list consistent with the main project
 CLASS_NAMES = [
     "air_conditioner",   # 0
     "car_horn",          # 1
@@ -16,8 +16,8 @@ CLASS_NAMES = [
 ]
 
 
-# ===== 这里是一个「简化复制版」的 BasicBlock 和 SmallResNet =====
-# 只依赖 torch，不依赖 pandas/librosa/sklearn 等。
+# ===== Simplified copies of BasicBlock and SmallResNet =====
+# Depends only on torch
 
 class BasicBlock(nn.Module):
     def __init__(self, in_channels, out_channels, stride=1):
@@ -95,16 +95,16 @@ class SmallResNet(nn.Module):
 
 def test_small_resnet_output_shape():
     """
-    检查 SmallResNet 在假数据上的输出形状是否正确：
-    输入: (batch, 3, n_mels, T)
-    输出: (batch, num_classes)
-    """
+        Verify that SmallResNet produces the correct output shape on dummy data.
+        Input:  (batch, 3, n_mels, T)
+        Output: (batch, num_classes)
+        """
     num_classes = len(CLASS_NAMES)
 
     model = SmallResNet(n_classes=num_classes, in_channels=3)
     model.eval()
 
-    # 与项目设定一致：n_mels=64, T=345（任意正数也可以）
+    # Same setting as the main project: n_mels=64, T=345
     dummy_input = torch.randn(4, 3, 64, 345)
 
     with torch.no_grad():
@@ -116,7 +116,7 @@ def test_small_resnet_output_shape():
 
 def test_small_resnet_single_sample():
     """
-    再测一下 batch_size = 1 时也能正常前向传播。
+    Additional test: ensure forward pass works when batch_size = 1.
     """
     num_classes = len(CLASS_NAMES)
 

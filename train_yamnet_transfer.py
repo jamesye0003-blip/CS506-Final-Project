@@ -33,10 +33,8 @@ TRAIN_FOLDS = [1, 2, 3, 4, 5, 6, 7, 8]
 VAL_FOLDS = [9]
 TEST_FOLDS = [10]
 
+# functions
 
-# =====================
-# 工具函数
-# =====================
 
 def set_seed(seed: int = 42):
     """固定随机种子，保证可复现性。"""
@@ -45,10 +43,7 @@ def set_seed(seed: int = 42):
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
 
-
-# =====================
-# Dataset 定义
-# =====================
+# Dataset
 
 class EmbeddingDataset(Dataset):
     """从 YAMNet 提取好的 embedding 中读取数据。"""
@@ -70,12 +65,11 @@ class EmbeddingDataset(Dataset):
         return torch.from_numpy(x), torch.tensor(y)
 
 
-# =====================
-# 模型定义
-# =====================
+# Model definition
 
+#Simple two-layer MLP classifier operating on 1024-dim YAMNet embeddings.
 class YAMNetMLP(nn.Module):
-    """简单的两层 MLP，用 YAMNet 1024 维 embedding 做分类。"""
+
 
     def __init__(self, in_dim: int = 1024, num_classes: int = NUM_CLASSES):
         super().__init__()
@@ -93,9 +87,7 @@ class YAMNetMLP(nn.Module):
         return self.net(x)
 
 
-# =====================
-# 数据划分
-# =====================
+# Fold-based split
 
 def split_by_folds(
     embeddings: np.ndarray,
@@ -105,7 +97,7 @@ def split_by_folds(
     val_folds,
     test_folds,
 ):
-    """按 UrbanSound8K 的 fold 划分 train/val/test。"""
+    #Split embeddings/labels by UrbanSound8K folds into train/val/test sets.
     train_mask = np.isin(folds, train_folds)
     val_mask = np.isin(folds, val_folds)
     test_mask = np.isin(folds, test_folds)
@@ -117,9 +109,7 @@ def split_by_folds(
     return (X_train, y_train), (X_val, y_val), (X_test, y_test)
 
 
-# =====================
-# 训练 & 验证
-# =====================
+# Training & evaluation
 
 def train_one_epoch(model, loader, criterion, optimizer, device):
     model.train()
@@ -146,7 +136,7 @@ def train_one_epoch(model, loader, criterion, optimizer, device):
     acc = correct / total
     return avg_loss, acc
 
-
+#Evaluate the model on the given DataLoader and return metrics.
 def eval_model(model, loader, criterion, device):
     model.eval()
     total_loss = 0.0
@@ -183,7 +173,6 @@ def eval_model(model, loader, criterion, device):
 
 
 def plot_training_curves(history, save_path="plots/yamnet_training_curves.png"):
-    """画出类似你截图里的 Loss & Accuracy 曲线。"""
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
     epochs = range(1, len(history["train_loss"]) + 1)
@@ -215,18 +204,15 @@ def plot_training_curves(history, save_path="plots/yamnet_training_curves.png"):
     plt.show()
     print(f"Training curves saved to {save_path}")
 
+#Plot two confusion matrices for YAMNet + MLP
 def plot_confusion_matrices_yamnet(y_true, y_pred, class_names, save_dir="plots"):
-    """
-    绘制 YAMNet + MLP 的两个混淆矩阵：
-    1) 原始计数
-    2) 按行归一化后的比例
-    """
+
     os.makedirs(save_dir, exist_ok=True)
 
     cm = confusion_matrix(y_true, y_pred, labels=list(range(len(class_names))))
     cm_norm = cm.astype("float") / cm.sum(axis=1, keepdims=True)
 
-    # ---- 图 1：原始计数 ----
+    # raw counts
     plt.figure(figsize=(10, 8))
     sns.heatmap(
         cm,
@@ -246,7 +232,7 @@ def plot_confusion_matrices_yamnet(y_true, y_pred, class_names, save_dir="plots"
     print(f"Confusion matrix (YAMNet counts) saved to {cm_path}")
     plt.close()
 
-    # ---- 图 2：按行归一化 ----
+    # row-normalized
     plt.figure(figsize=(10, 8))
     sns.heatmap(
         cm_norm,
@@ -268,9 +254,7 @@ def plot_confusion_matrices_yamnet(y_true, y_pred, class_names, save_dir="plots"
     print(f"Confusion matrix (YAMNet normalized) saved to {cm_norm_path}")
     plt.close()
 
-# =====================
-# 主程序
-# =====================
+
 
 def main(args):
     set_seed(args.seed)
@@ -278,7 +262,7 @@ def main(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Using device:", device)
 
-    # ---- 读取 NPZ：embeddings / labels / folds ----
+    # Load NPZ: embeddings / labels / folds
     data = np.load(args.npz_path)
     embeddings = data["embeddings"]  # [N, D]
     labels = data["labels"]          # [N]
@@ -320,7 +304,7 @@ def main(args):
         num_workers=0,
     )
 
-    # ---- 模型 / 损失 / 优化器 ----
+    # Model / loss / optimizer
     in_dim = embeddings.shape[1]
     model = YAMNetMLP(in_dim=in_dim, num_classes=NUM_CLASSES).to(device)
     criterion = nn.CrossEntropyLoss()
@@ -333,7 +317,7 @@ def main(args):
     best_val_acc = 0.0
     best_state = None
 
-    # 记录训练曲线
+    # History for plotting curves
     history = {
         "train_loss": [],
         "train_acc": [],
@@ -341,7 +325,7 @@ def main(args):
         "val_acc": [],
     }
 
-    # ---- 训练循环 ----
+    # Training loop
     for epoch in range(1, args.epochs + 1):
         train_loss, train_acc = train_one_epoch(
             model, train_loader, criterion, optimizer, device
@@ -361,27 +345,27 @@ def main(args):
             f"Val Loss: {val_loss:.4f} | Val Acc: {val_acc:.4f}"
         )
 
-        # 记录最好的验证集模型
+        # Track best validation accuracy
         if val_acc > best_val_acc:
             best_val_acc = val_acc
             best_state = model.state_dict()
 
     print("Best val acc:", best_val_acc)
 
-    # 画出训练曲线
+    # Plot training curves
     plot_training_curves(history, save_path=args.save_curves)
 
     if best_state is not None:
         model.load_state_dict(best_state)
 
-    # ---- Test 评估 ----
+    # Test
     test_loss, test_acc, y_true, y_pred = eval_model(
         model, test_loader, criterion, device
     )
     print("\n===== Test result (YAMNet + MLP) =====")
     print(f"Test Loss: {test_loss:.4f} | Test Acc: {test_acc:.4f}")
 
-    # classification_report（就是你之前截图里的那个表）
+    # classification_report
     print("\nTest Report:")
     report_str = classification_report(
         y_true,
@@ -399,7 +383,6 @@ def main(args):
 
     plot_confusion_matrices_yamnet(y_true, y_pred, CLASS_NAMES, save_dir="plots")
 
-    # 可选：把报告保存成文本文件，方便写 README
     if args.save_report:
         with open(args.save_report, "w", encoding="utf-8") as f:
             f.write("===== Test result (YAMNet + MLP) =====\n")

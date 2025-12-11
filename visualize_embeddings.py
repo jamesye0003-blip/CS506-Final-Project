@@ -14,7 +14,7 @@ except ImportError:
 
 NPZ_PATH = "yamnet_urbansound8k_embeddings.npz"
 SAVE_DIR = "visualizations"
-SUBSAMPLE = 2000  # t-SNE 抽样以加速
+SUBSAMPLE = 2000  # Subsample for t-SNE to improve speed
 
 
 CLASS_NAMES = [
@@ -69,6 +69,7 @@ def main():
         y = labels
 
     print("Running PCA…")
+    # Reduce dimensionality before t-SNE for faster computation and denoising
     pca = PCA(n_components=min(50, X.shape[1]))
     X_pca = pca.fit_transform(X)
 
@@ -76,7 +77,6 @@ def main():
     tsne = TSNE(n_components=2, init="pca", learning_rate="auto", perplexity=30)
     X_2d = tsne.fit_transform(X_pca)
 
-    # ---- 静态图保存 ----
     plt.figure(figsize=(10, 8))
     cmap = plt.get_cmap("tab10")
     for cid in range(10):
@@ -92,7 +92,7 @@ def main():
     plt.show()
     print(f"[Saved] {out_png}")
 
-    # ---- 可交互 HTML ----
+    # Save interactive HTML visualization
     save_interactive_tsne(X_2d, y)
 
 

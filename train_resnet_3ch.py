@@ -19,13 +19,13 @@ from torch.cuda.amp import autocast, GradScaler
 from sklearn.metrics import classification_report, confusion_matrix
 
 
-# ===================== 配置 =====================
+# CONFIGURATION
 
 DATA_ROOT = Path("data")
 AUDIO_DIR = DATA_ROOT / "build" / "audio"
 META_FILE = DATA_ROOT / "metadata" / "UrbanSound8K.csv"
 
-# UrbanSound8K 官方类顺序
+# UrbanSound8K
 CLASS_NAMES = [
     "air_conditioner",   # 0
     "car_horn",          # 1
@@ -44,16 +44,16 @@ CFG = {
     "batch_size": 32,
     "lr": 1e-4,
     "weight_decay": 3e-4,
-    "sample_rate": None,      # None = 保留原始 sr
+    "sample_rate": None,
     "n_mels": 64,
     "n_fft": 1024,
     "hop_length": 512,
-    "fixed_seconds": 4.0,     # 统一到 4 秒
+    "fixed_seconds": 4.0,     # unify all audio to 4 seconds
     "fmax": 8000,
-    "num_workers": 2,         # 有 main guard，可以用多进程
+    "num_workers": 2,
     "seed": 42,
     "early_stop_patience": 20,
-    "T_fixed": None,          # 运行时自动计算
+    "T_fixed": None,          #automatically computed at runtime
 }
 
 TRAIN_FOLDS = [1, 2, 3, 4, 5, 6, 7, 8]
@@ -61,7 +61,7 @@ VAL_FOLDS = [9]
 TEST_FOLDS = [10]
 
 
-# ===================== 工具函数 =====================
+# UTILITY FUNCTIONS
 
 def set_seed(seed: int = 42):
     random.seed(seed)
@@ -76,7 +76,7 @@ def frames_for_seconds(seconds: float, hop_length: int, sr: int) -> int:
     return int(np.ceil(seconds * sr / hop_length))
 
 
-# ===================== Dataset：3 通道 Mel+Δ+ΔΔ =====================
+# DATASET: 3-CHANNEL MEL
 
 class UrbanSoundMel3Ch(Dataset):
     def __init__(self, df, audio_dir, folds, cfg, class_to_idx, is_train: bool):
@@ -87,12 +87,13 @@ class UrbanSoundMel3Ch(Dataset):
         self.n_mels = cfg["n_mels"]
         self.is_train = is_train
 
-        # 共享 T_fixed：第一次根据真实 sr 计算，写回 cfg
+        # Compute shared T_fixed only once based on a real audio sample
         if cfg["T_fixed"] is None:
             ex_row = self.df.iloc[0]
             ex_path = self.audio_dir / f"fold{ex_row.fold}" / ex_row.slice_file_name
             y, sr = sf.read(ex_path)
             y = np.asarray(y, dtype=np.float32)
+            # Convert stereo → mono
             if y.ndim == 2:
                 y = y.mean(axis=1)
             if cfg["sample_rate"] is not None and sr != cfg["sample_rate"]:
@@ -111,18 +112,18 @@ class UrbanSoundMel3Ch(Dataset):
         row = self.df.iloc[idx]
         wav_path = self.audio_dir / f"fold{row.fold}" / row.slice_file_name
 
-        # 读音频
+        # Load wav
         y, sr = sf.read(wav_path)
         y = np.asarray(y, dtype=np.float32)
         if y.ndim == 2:
             y = y.mean(axis=1)
 
-        # 可选重采样
+        # Optional resampling
         if self.cfg["sample_rate"] is not None and sr != self.cfg["sample_rate"]:
             y = librosa.resample(y, orig_sr=sr, target_sr=self.cfg["sample_rate"])
             sr = self.cfg["sample_rate"]
 
-        # ===== 1) 计算 log-Mel =====
+        # Compute log-Mel spectrogram
         S = librosa.feature.melspectrogram(
             y=y,
             sr=sr,
@@ -133,23 +134,23 @@ class UrbanSoundMel3Ch(Dataset):
         )
         logmel = librosa.power_to_db(S, ref=np.max)  # (n_mels, T_raw)
 
-        # ===== 2) 确保时间帧数足够做 delta（至少 9 帧）=====
+        # Ensure at least 9 frames for delta computation
         min_frames_for_delta = 9
         T_raw = logmel.shape[1]
         if T_raw < min_frames_for_delta:
             pad = min_frames_for_delta - T_raw
-            # 在时间轴右侧用最后一帧做边缘填充，避免出现全 0
+            # Pad time axis using the last frame to avoid zeros
             logmel = np.pad(logmel, ((0, 0), (0, pad)), mode="edge")
 
-        # 现在 logmel.shape[1] >= 9，可以安全地用默认 width=9
+        #  Now T >= 9 → safe for delta()
         delta1 = librosa.feature.delta(logmel)           # (n_mels, T_pad)
         delta2 = librosa.feature.delta(logmel, order=2)  # (n_mels, T_pad)
 
-        # ===== 3) 组装 3 通道特征 =====
+        # Assemble 3-channel feature
         feat = np.stack([logmel, delta1, delta2], axis=0)  # (3, n_mels, T_pad)
         _, _, T = feat.shape
 
-        # 裁剪 / 填充到 T_fixed
+        # Pad or crop to T_fixed
         if T < self.T_fixed:
             pad_T = self.T_fixed - T
             feat = np.pad(feat, ((0, 0), (0, 0), (0, pad_T)), mode="constant")
@@ -166,7 +167,7 @@ class UrbanSoundMel3Ch(Dataset):
         return torch.from_numpy(x), torch.tensor(y_label, dtype=torch.long), str(wav_path)
 
 
-# ===================== ResNet 模型 =====================
+# RESNET MODEL
 
 class BasicBlock(nn.Module):
     def __init__(self, in_channels, out_channels, stride=1):
@@ -204,7 +205,7 @@ class BasicBlock(nn.Module):
         out = self.relu(out)
         return out
 
-
+#A compact ResNet-like model for 3-channel spectrogram input.
 class SmallResNet(nn.Module):
     def __init__(self, n_classes, in_channels=3):
         super().__init__()
@@ -233,7 +234,7 @@ class SmallResNet(nn.Module):
         return logits
 
 
-# ===================== 训练 / 验证函数 =====================
+#  TRAINING / EVALUATION
 
 def train_one_epoch(model, loader, optimizer, criterion, scaler, device):
     model.train()
@@ -298,7 +299,7 @@ def eval_model(model, loader, criterion, device):
     return epoch_loss, epoch_acc, all_targets, all_preds
 
 
-# ===================== 主流程 =====================
+# MAIN WORKFLOW
 
 def main():
     set_seed(CFG["seed"])
@@ -310,7 +311,7 @@ def main():
     print(df.head(), "\n")
     print("SAMPLE NUMBER:", len(df))
 
-    # 用 CSV 中的 class 列来确定类别顺序
+    # Extract list of classes from CSV
     classes_list = sorted(df["class"].unique().tolist())
     print(classes_list)
 
@@ -318,7 +319,7 @@ def main():
     idx_to_class = {i: c for c, i in class_to_idx.items()}
     print(class_to_idx)
 
-    # 训练 / 验证 / 测试划分
+    # Dataset splits
     train_ds = UrbanSoundMel3Ch(df, AUDIO_DIR, TRAIN_FOLDS, CFG,
                                 class_to_idx, is_train=True)
     val_ds = UrbanSoundMel3Ch(df, AUDIO_DIR, VAL_FOLDS, CFG,
@@ -358,14 +359,14 @@ def main():
         f"val:{len(val_loader)}, test:{len(test_loader)}"
     )
 
-    # 建模
+    # Build model
     model = SmallResNet(n_classes=len(classes_list), in_channels=3).to(device)
     print(
         "模型参数量 (M):",
         sum(p.numel() for p in model.parameters()) / 1e6
     )
 
-    # 类别权重（根据训练集频率）
+    # Class weighting based on frequency
     train_counts = train_ds.df["class"].value_counts().sort_index()
     max_count = train_counts.max()
     class_weights = (max_count / train_counts).values.astype(np.float32)
@@ -388,7 +389,7 @@ def main():
     best_state = None
     patience = CFG["early_stop_patience"]
 
-    # ========= 训练循环 =========
+    # Training loop
     for epoch in range(1, CFG["epochs"] + 1):
         t0 = time.time()
 
@@ -428,7 +429,7 @@ def main():
             )
             break
 
-    # ========= 使用最佳模型在测试集评估 =========
+    # Save best model and evaluate on test set
     if best_state is not None:
         model.load_state_dict(best_state)
     ckpt_path = "resnet3ch_best.pth"
@@ -452,7 +453,7 @@ def main():
         )
     )
 
-    # ========= 可视化：混淆矩阵 & 训练曲线 =========
+    # Visualization
     os.makedirs("plots", exist_ok=True)
 
     cm = confusion_matrix(
@@ -512,7 +513,6 @@ def main():
     print("Training curves saved to plots/training_curve_resnet3ch.png")
 
 
-# ===================== Windows 多进程安全入口 =====================
 
 if __name__ == "__main__":
     main()

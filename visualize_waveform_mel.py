@@ -5,7 +5,7 @@ import librosa
 import librosa.display
 import matplotlib.pyplot as plt
 
-# ========= 配置 =========
+# Configuration
 URBANSOUND_ROOT = "data"
 CSV_PATH = os.path.join(URBANSOUND_ROOT, "metadata", "UrbanSound8K.csv")
 SAVE_DIR = "visualizations"
