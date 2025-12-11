@@ -33,7 +33,7 @@ def load_and_resample(path, target_sr=TARGET_SR):
 #Extract a single 1024-dimensional YAMNet embedding from a 1D waveform.
 def extract_yamnet_embedding(waveform):
 
-    # YAMNet expects a Tensor of shape [num_samples]
+    # YAMNet expects a Tensor of shape
     waveform_tf = tf.convert_to_tensor(waveform, dtype=tf.float32)
     # Model outputs
     _, embeddings, _ = yamnet_model(waveform_tf)
