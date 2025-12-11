@@ -1,0 +1,15 @@
+torch
+torchaudio
+librosa
+soundfile
+numpy
+scipy
+pandas
+scikit-learn
+matplotlib
+seaborn
+plotly
+tensorflow
+tensorflow_hub
+tqdm
+pytest
