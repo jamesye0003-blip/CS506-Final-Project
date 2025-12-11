@@ -121,16 +121,16 @@ Outputs:
 - One sample from each of 10 UrbanSound8K classes
 - Waveform visualizations  
 - Mel-spectrogram visualizations 
-![img_1.png](visualizations\waveform_melspec_air_conditioner.png)
-![img_2.png](visualizations\waveform_melspec_car_horn.png) 
-![img_3.png](visualizations\waveform_melspec_children_playing.png)
-![img_4.png](visualizations\waveform_melspec_dog_bark.png)
-![img_5.png](visualizations\waveform_melspec_drilling.png)
-![img_6.png](visualizations\waveform_melspec_engine_idling.png)
-![img_7.png](visualizations\waveform_melspec_gun_shot.png)
-![img_8.png](visualizations\waveform_melspec_jackhammer.png)
-![img_9.png](visualizations\waveform_melspec_siren.png)
-![img_10.png](visualizations\waveform_melspec_street_music.png)
+![img_1.png](plots/airconditioner.png)
+![img_2.png](plots/carhorn.png) 
+![img_3.png](plots/childrenplaying.png)
+![img_4.png](plots/dogbark.png)
+![img_5.png](plots/drilling.png)
+![img_6.png](plots/engineidling.png)
+![img_7.png](plots/gunshot.png)
+![img_8.png](plots/jackhammer.png)
+![img_9.png](plots/siren.png)
+![img_10.png](plots/streetmusic.png)
 ## 4.2 YAMNet Embedding Visualization (PCA to t-SNE)
 Script: `visualize_embeddings.py`
 This pipeline:
@@ -599,4 +599,5 @@ See:
 - `requirements.txt`  
 - `test`  
 - Visualization outputs  
+
 
