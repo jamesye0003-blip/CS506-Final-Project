@@ -8,8 +8,12 @@ VIS_DIR = visualizations
 install:
 	$(PYTHON) -m pip install -r requirements.txt
 
+# ====== Data (UrbanSound8K) ======
+data:
+	$(PYTHON) data/download.py
+
 # ====== Training ======
-train_resnet:
+train_resnet: data
 	$(PYTHON) train_resnet_3ch.py
 
 train_yamnet:
@@ -35,7 +39,7 @@ viz_resnet:
 viz_yamnet:
 	$(PYTHON) visualize_embeddings.py
 
-viz_waveform_mel:
+viz_waveform_mel: data
 	$(PYTHON) visualize_waveform_mel.py
 
 viz_all: viz_resnet viz_yamnet viz_waveform_mel
@@ -58,9 +62,10 @@ clean:
 # This runs everything needed for final report reproduction
 full:
 	make install
+	make data
 	make train_all
 	make extract_all
 	make viz_all
 	make test
 
-.PHONY: install train_resnet train_yamnet train_all extract_resnet extract_yamnet extract_all viz_resnet viz_yamnet viz_waveform_mel viz_all test clean full
+.PHONY: install data train_resnet train_yamnet train_all extract_resnet extract_yamnet extract_all viz_resnet viz_yamnet viz_waveform_mel viz_all test clean full

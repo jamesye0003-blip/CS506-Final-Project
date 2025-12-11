@@ -1,5 +1,7 @@
 torch
 torchaudio
+soundata
+audeer
 librosa
 soundfile
 numpy
